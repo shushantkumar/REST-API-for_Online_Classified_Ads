@@ -1,0 +1,43 @@
+to automatically run the changes we install 
+npm install --save-dev nodemon
+But then we need to add it in package.json file for it to run as it is not globally installed
+so to do that write "start": "nodemon server.js"
+
+to log some details (logger) we can use morgan
+npm install --save morgan
+then see app.js 
+
+to parse the input request we install
+npm install --save body-parser
+its express tool to extract data from incoming request which is not very well performed by node
+it supports url suport bodies and json data
+
+CORS errors are due to frontend and server being on different addresses 
+Practically not allowed but can be solved by sending headers from server to client
+It is security used by browsers so no problem with POSTMAN as it is not that
+we did changes in app.js for this
+
+we will use mongodb atlas
+cluster name: emereNvendre-platform
+username: shushantenv
+password: valarmorghulis
+
+this for mongodb 
+npm install --save mongoose
+
+.exec().then().catch() important and for all
+
+populate is used to access one thing from another
+
+to store images we use package multer
+npm install --save multer
+
+to add security to hashing we add bcrypt
+npm install --save bcrypt 
+
+to add json webtoken 
+npm install --save jsonwebtoken 
+
+//users linked to product status:done
+
+//users linked to order status:done
