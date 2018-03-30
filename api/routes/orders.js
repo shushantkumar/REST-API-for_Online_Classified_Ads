@@ -5,10 +5,18 @@ const authcheck = require('../middleware/authcheck');
 
 const Order = require('../models/order');
 const User = require('../models/user');
+
+const cors = require('cors');
+
+const method = {
+    "origin": "*",
+    "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
+    "optionsSuccessStatus": 200
+  };
 //buyer order get
-router.get('/',authcheck, (req, res, next) => {
+router.get('/',cors(method), (req, res, next) => {
     Order.find()
-    .select("name price user _id")   //this to allow only these three things to be responded
+    .select('name price _id user description category')   //this to allow only these three things to be responded
     .populate('user',"name emailID mobileNo")
     .exec()
     .then(docs => {
@@ -20,12 +28,14 @@ router.get('/',authcheck, (req, res, next) => {
             name: doc.name,
             price: doc.price,
             _id: doc._id,
+            description:doc.description,
+            category: doc.category,
             user: doc.user,
 
             //this below to provide access to detailed product links and stuffs
             request: {
               type: "GET",
-              url: "http://localhost:3000/orders/" + doc._id
+              url: "https://agile-dawn-35104.herokuapp.com/orders/" + doc._id
             }
           };
         })
@@ -47,7 +57,7 @@ router.get('/',authcheck, (req, res, next) => {
 });
 
 //buyer order post
-router.post('/',authcheck, (req, res, next) => {
+router.post('/',cors(method),authcheck, (req, res, next) => {
     User.findById(req.body.userID)
     .then(user => {
       if (!user) {
@@ -59,6 +69,8 @@ router.post('/',authcheck, (req, res, next) => {
         _id: new mongoose.Types.ObjectId(),
         name: req.body.name,
         price: req.body.price,
+        description:req.body.description,
+        category:req.body.category,
         user: req.body.userID
     });
       return order.save();
@@ -72,10 +84,12 @@ router.post('/',authcheck, (req, res, next) => {
           name: result.name,
             price: result.price,
             _id: result._id,
+            description: result.description,
+            category:result.category,
             user:result.user,
             request: {
                 type: 'GET',
-                url: "http://localhost:3000/orders/" + result._id
+                url: "https://agile-dawn-35104.herokuapp.com/orders/" + result._id
             }
         }
       });
@@ -89,10 +103,10 @@ router.post('/',authcheck, (req, res, next) => {
 });
 
 //buyer order get specific products
-router.get('/:orderId',authcheck, (req, res, next) => {
+router.get('/:orderId',cors(method),authcheck, (req, res, next) => {
     const id = req.params.orderId;
     Order.findById(id)
-    .select('name price _id user')
+    .select('name price _id user description category')
     .populate('user',"name emailID mobileNo")
     .exec()
     .then(doc => {
@@ -104,7 +118,7 @@ router.get('/:orderId',authcheck, (req, res, next) => {
             order: doc, 
             request: {
                 type: 'GET',
-                url: 'http://localhost:3000/products'
+                url: 'https://agile-dawn-35104.herokuapp.com/orders'
             }
         });
       } else {
@@ -120,7 +134,7 @@ router.get('/:orderId',authcheck, (req, res, next) => {
 });
 
 //patch 
-router.patch('/:orderId',authcheck, (req, res, next) => {
+router.patch('/:orderId',cors(method),authcheck, (req, res, next) => {
     /*res.status(200).json({
         message: 'Updated product!'
     });*/
@@ -139,7 +153,7 @@ router.patch('/:orderId',authcheck, (req, res, next) => {
           message: 'Order updated',
           request: {
               type: 'GET',
-              url: 'http://localhost:3000/orders/' + id
+              url: 'https://agile-dawn-35104.herokuapp.com/orders/' + id
           }
           });
       })
@@ -152,7 +166,7 @@ router.patch('/:orderId',authcheck, (req, res, next) => {
 });
 
 //buyer deleted the product
-router.delete('/:orderId', authcheck,(req, res, next) => {
+router.delete('/:orderId',cors(method), authcheck,(req, res, next) => {
     const id = req.params.orderId;
     Order.remove({ _id: id })
       .exec()
@@ -161,7 +175,7 @@ router.delete('/:orderId', authcheck,(req, res, next) => {
           message: 'Order deleted',
           request: {
               type: 'POST',
-              url: 'http://localhost:3000/orders',
+              url: 'https://agile-dawn-35104.herokuapp.com/orders',
               body: { name: 'String', price: 'Number' }
           }
       });

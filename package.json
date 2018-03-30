@@ -2,16 +2,23 @@
   "name": "emerenvendre-server",
   "version": "1.0.0",
   "description": "server for emereNvendre",
-  "main": "index.js",
+  "engines": {
+    "node": "6.11.0"
+  },
+  "keywords": [
+    "node",
+    "heroku"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon server.js"
+    "start": "node server.js"
   },
-  "author": "Shushant Kumar",
+  "author": "Shushant Kumar and Anmol Horo",
   "license": "ISC",
   "dependencies": {
-    "bcrypt": "^1.0.3",
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.2",
+    "cors": "^2.8.4",
     "express": "^4.16.2",
     "jsonwebtoken": "^8.1.1",
     "mongoose": "^5.0.4",

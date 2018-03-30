@@ -4,13 +4,21 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 
 const authcheck = require('../middleware/authcheck');
+const cors = require('cors');
+
+const method = {
+    "origin": "*",
+    "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
+    "optionsSuccessStatus": 200
+  };
 
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
     cb(null, './uploads/');
   },
   filename: function(req, file, cb) {
-    cb(null, file.originalname);
+    var d= new Date();
+    cb(null,d.toISOString().replace(/:/g, '-') +'-' + file.originalname);
   }
 });
 
@@ -27,7 +35,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 1024 * 1024 * 5
+    fileSize: 1024 * 1024 * 30
   },
   fileFilter: fileFilter
 });
@@ -38,13 +46,13 @@ const User = require('../models/user');
 
 // just / because /products added in app.js
 //req is request, res is response object
-router.get('/',authcheck,(req,res,next)=>{
+router.get('/',cors(method),(req,res,next)=>{
    /* res.status(200).json({
         message: 'Handling GET requests to prod'
     });*/
     Product.find()
-    .select("name price user _id productImage")   //this to allow only these three things to be responded
-    .populate('user',"name emailID mobileNo")
+    .select("name price user _id productImage description category")   //this to allow only these three things to be responded
+    .populate('user',"name emailID mobileNo address")
     .exec()
     .then(docs => {
       console.log(docs);
@@ -55,13 +63,15 @@ router.get('/',authcheck,(req,res,next)=>{
             name: doc.name,
             price: doc.price,
             _id: doc._id,
+            description: doc.description,
             productImage:doc.productImage,
+            category: doc.category,
             user: doc.user,
 
             //this below to provide access to detailed product links and stuffs
             request: {
               type: "GET",
-              url: "http://localhost:3000/products/" + doc._id
+              url: "https://agile-dawn-35104.herokuapp.com/products/" + doc._id
             }
           };
         })
@@ -85,7 +95,7 @@ router.get('/',authcheck,(req,res,next)=>{
 
 //post requests
 //201 for service was successfully created
-router.post('/',authcheck,upload.single('productImage'),(req,res,next)=>{
+router.post('/',cors(method),upload.single('productImage'),(req,res,next)=>{
     //to parse it below variable, .body is to access the body of request
     console.log(req.file);
     User.findById(req.body.userID)
@@ -99,7 +109,9 @@ router.post('/',authcheck,upload.single('productImage'),(req,res,next)=>{
         _id: new mongoose.Types.ObjectId(),
         name: req.body.name,
         price: req.body.price,
-        user: req.body.userID,
+        description: req.body.description,
+        user: req.body.userID,     
+        category : req.body.category,   
         productImage:req.file.path, 
     });
       return product.save();
@@ -113,10 +125,13 @@ router.post('/',authcheck,upload.single('productImage'),(req,res,next)=>{
           name: result.name,
             price: result.price,
             _id: result._id,
+            description: result.description,
+            productImage: result.productImage,
+            category : result.category,
             user:result.user,
             request: {
                 type: 'GET',
-                url: "http://localhost:3000/products/" + result._id
+                url: "https://agile-dawn-35104.herokuapp.com/products/" + result._id
             }
         }
       });
@@ -131,11 +146,11 @@ router.post('/',authcheck,upload.single('productImage'),(req,res,next)=>{
 
 //specific product
 //:productId is dynammic variable
-router.get('/:productId',authcheck, (req, res, next) => {
+router.get('/:productId',cors(method),authcheck, (req, res, next) => {
     const id = req.params.productId;
     Product.findById(id)
-    .select('name price _id user')
-    .populate('user',"name emailID mobileNo")
+    .select('name price _id user description category')
+    .populate('user',"name emailID mobileNo address")
     .exec()
     .then(doc => {
       console.log("From database", doc);
@@ -146,7 +161,7 @@ router.get('/:productId',authcheck, (req, res, next) => {
             product: doc, 
             request: {
                 type: 'GET',
-                url: 'http://localhost:3000/products'
+                url: 'https://agile-dawn-35104.herokuapp.com/products'
             }
         });
       } else {
@@ -162,7 +177,7 @@ router.get('/:productId',authcheck, (req, res, next) => {
 });
 
 //patch is different from put as in case of minor changes or just change in one field
-router.patch('/:productId',authcheck, (req, res, next) => {
+router.patch('/:productId',cors(method),authcheck, (req, res, next) => {
     /*res.status(200).json({
         message: 'Updated product!'
     });*/
@@ -181,7 +196,7 @@ router.patch('/:productId',authcheck, (req, res, next) => {
           message: 'Product updated',
           request: {
               type: 'GET',
-              url: 'http://localhost:3000/products/' + id
+              url: 'https://agile-dawn-35104.herokuapp.com/products/' + id
           }
           });
       })
@@ -197,7 +212,7 @@ router.patch('/:productId',authcheck, (req, res, next) => {
 
 
 //deleting a product
-router.delete('/:productId',authcheck, (req, res, next) => {
+router.delete('/:productId',cors(method),authcheck, (req, res, next) => {
     /*res.status(200).json({
         message: 'Deleted product!'
     });*/
@@ -211,7 +226,7 @@ router.delete('/:productId',authcheck, (req, res, next) => {
           message: 'Product deleted',
           request: {
               type: 'POST',
-              url: 'http://localhost:3000/products',
+              url: 'https://agile-dawn-35104.herokuapp.com/products',
               body: { name: 'String', price: 'Number' }
           }
       });
