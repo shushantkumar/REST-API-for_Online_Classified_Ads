@@ -135,9 +135,7 @@ router.get('/:orderId',cors(method),authcheck, (req, res, next) => {
 
 //patch 
 router.patch('/:orderId',cors(method),authcheck, (req, res, next) => {
-    /*res.status(200).json({
-        message: 'Updated product!'
-    });*/
+
 
     const id = req.params.orderId;
     const updateOps = {};
